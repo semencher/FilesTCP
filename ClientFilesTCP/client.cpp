@@ -55,8 +55,18 @@ void Client::clientThread()
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE;	// При намерении использовать вызывающую структуру в bind.
 	
+	WSADATA wsaData;
+	int iResult;
+	// Initialize Winsock
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0)
+	{
+		printf("WSAStartup failed with error: %d\n", iResult);
+		return;
+	}
+
 	// Resolve the server address and port
-	result = getaddrinfo("localhost", SERVER_PORT, &hints, &serverAddr);
+	result = getaddrinfo(SERVER_ADDR, SERVER_PORT, &hints, &serverAddr);
 	if (result != 0)
 	{
 		std::cout << "getaddrinfo failed with error: " << result << "\n";
@@ -118,4 +128,5 @@ void Client::clientThread()
 	closesocket(clientSocket);
 
 	std::cout << "Client has been stopped.\n";
+	WSACleanup();
 }

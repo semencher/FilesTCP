@@ -18,7 +18,7 @@ int main()
 		if (command == "quit")
 			break;
 		else
-			std::cout << "Invalid command";
+			client.sendFile(command);
 	}
 
 	client.stop();

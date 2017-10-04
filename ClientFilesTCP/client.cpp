@@ -34,6 +34,11 @@ DWORD WINAPI Client::clientThreadStatic(void *param)
 	return 0;
 }
 
+void Client::sendFile(const std::string &fileName)
+{
+	fileName_ = fileName;
+}
+
 #define SERVER_PORT "21345"
 #define SERVER_ADDR "localhost"
 
@@ -105,7 +110,18 @@ void Client::clientThread()
 	freeaddrinfo(serverAddr);
 	while (!forTerminateThread_)
 	{
-		char *buffer = "Hello from client!\n";
+		bool forDelete = false;
+		char *buffer;
+		if (fileName_ != "") {
+			buffer = new char[fileName_.length() + 1];
+			std::strcpy(buffer, fileName_.c_str());
+			fileName_ = "";
+			forDelete = true;
+		}
+		else {
+			buffer = "Hello from client!\n";
+		}
+
 		int buf_size = (int)strlen(buffer);
 		int sent = 0;
 		while (sent < buf_size)
@@ -119,6 +135,8 @@ void Client::clientThread()
 			sent += result;
 		}
 		Sleep(1000);
+		if (forDelete)
+			delete[]buffer;
 	}
 	result = shutdown(clientSocket, SD_SEND);
 	if (result == SOCKET_ERROR)

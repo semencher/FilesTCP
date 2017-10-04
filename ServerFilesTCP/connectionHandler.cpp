@@ -57,7 +57,7 @@ void ConnectionHandler::handlerThread()
 			}
 			else
 			{
-				if (FD_ISSET(socket, &readfds))
+				if (FD_ISSET(socket_, &readfds))
 				{
 					int read = recv(socket_, buffer, IN_BUFFER_SIZE, 0);
 					if (read > 0)

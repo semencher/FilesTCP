@@ -1,6 +1,7 @@
 #include "connectionHandler.h"
 
 #include <iostream>
+#include <fstream>
 
 ConnectionHandler::ConnectionHandler(SOCKET socket)
 {
@@ -62,11 +63,15 @@ void ConnectionHandler::handlerThread()
 					int read = recv(socket_, buffer, IN_BUFFER_SIZE, 0);
 					if (read > 0)
 					{
-						buffer[read] = 0;
-						std::cout << buffer;
+						std::ofstream oFile;
+						oFile.open("IMG.JPG", std::ios::out | std::ios::binary | std::ios::app);
+						std::cout << read << "\n";
+						//buffer[read] = 0;
+						oFile.write(buffer, read);
+						oFile.close();
 					}
 				}
 			}
-		Sleep(1000);
+		//Sleep(1000);
 	}
 }

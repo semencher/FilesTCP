@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 
@@ -111,29 +112,50 @@ void Client::clientThread()
 	while (!forTerminateThread_)
 	{
 		bool forDelete = false;
-		char *buffer;
+		char *buffer = nullptr;
 		if (fileName_ != "") {
-			buffer = new char[fileName_.length() + 1];
-			std::strcpy(buffer, fileName_.c_str());
+
+			const size_t sizeBuffer = 400;
+
+			std::ifstream iFile;
+			iFile.open(fileName_, std::ios::in | std::ios::binary);
+
+			iFile.seekg(0, std::ios::end);
+			size_t length = iFile.tellg();
+			iFile.seekg(0, std::ios::beg);
+
+			buffer = new char[sizeBuffer + 1];
+
+			int sent = 0;
+			while (length > sizeBuffer) {
+				iFile.read(buffer, sizeBuffer);
+				buffer[sizeBuffer] = '\0';
+				result = send(clientSocket, buffer, sizeBuffer, 0);
+				if (result == SOCKET_ERROR)
+				{
+					printf("send from client failed with error: %d\n", WSAGetLastError());
+					std::cout << sent;
+					break;
+				}
+				sent += result;
+				length = length - sizeBuffer;
+			}
+			if (length > 0) {
+				iFile.read(buffer, length);
+				buffer[length] = '\0';
+				result = send(clientSocket, buffer, length, 0);
+				if (result == SOCKET_ERROR)
+				{
+					printf("send from client failed with error: %d\n", WSAGetLastError());
+					break;
+				}
+				sent += result;
+			}
+
 			fileName_ = "";
 			forDelete = true;
 		}
-		else {
-			buffer = "Hello from client!\n";
-		}
 
-		int buf_size = (int)strlen(buffer);
-		int sent = 0;
-		while (sent < buf_size)
-		{
-			result = send(clientSocket, buffer + sent, (int)strlen(buffer), 0);
-			if (result == SOCKET_ERROR)
-			{
-				printf("send from client failed with error: %d\n", WSAGetLastError());
-				break;
-			}
-			sent += result;
-		}
 		Sleep(1000);
 		if (forDelete)
 			delete[]buffer;

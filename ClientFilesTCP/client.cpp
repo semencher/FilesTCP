@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <winsock2.h>
 #include <WS2tcpip.h>
@@ -109,11 +110,12 @@ void Client::clientThread()
 		return;
 	}
 	freeaddrinfo(serverAddr);
+	bool sendName = false;
 	while (!forTerminateThread_)
 	{
 		bool forDelete = false;
 		char *buffer = nullptr;
-		if (fileName_ != "") {
+		if (!fileName_.empty()) {
 
 			const size_t sizeBuffer = 400;
 
@@ -125,6 +127,26 @@ void Client::clientThread()
 			iFile.seekg(0, std::ios::beg);
 
 			buffer = new char[sizeBuffer + 1];
+
+			if (!sendName) {
+				int i = 0;
+				for (; i < fileName_.size(); ++i) {
+					buffer[i] = fileName_[i];
+				}
+				buffer[i] = '*';
+				++i;
+				std::string size = std::to_string(length);
+				for (int j = 0; j < size.size(); ++j, ++i) {
+					buffer[i] = size[j];
+				}
+				buffer[i] = '*';
+				buffer[i + 1] = '\0';
+				++i;
+
+				result = send(clientSocket, buffer, i, 0);
+				sendName = true;
+			}
+
 
 			int sent = 0;
 			while (length > sizeBuffer) {
@@ -154,6 +176,7 @@ void Client::clientThread()
 
 			fileName_ = "";
 			forDelete = true;
+			sendName = false;
 		}
 
 		Sleep(1000);
